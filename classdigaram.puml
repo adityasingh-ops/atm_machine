@@ -1,0 +1,195 @@
+@startuml ATM_ClassDiagram
+
+' ===========================================
+' INTERFACES
+' ===========================================
+interface ATMState {
+  +void insertCard()
+  +void removeCard()
+  +void enterPin()
+  +void selectTransaction()
+  +void deposit()
+  +void withdraw()
+  +void balanceInquiry()
+  +void miniStatement()
+  +void printReceipt()
+}
+
+interface WithdrawalStrategy {
+  +boolean withdraw(NoteDispenser, int)
+}
+
+interface Keypad {
+  +String getInput()
+  +boolean supportsNumeric()
+  +boolean supportsTouch()
+}
+
+' ===========================================
+' STATE CLASSES (implements ATMState)
+' ===========================================
+class IdleState {
+  -ATMContext context
+}
+class CardInsertedState {
+  -ATMContext context
+}
+class PinVerifiedState {
+  -ATMContext context
+}
+class TransactionState {
+  -ATMContext context
+}
+class BalanceInquiryState {
+  -ATMContext context
+}
+class MiniStatementState {
+  -ATMContext context
+}
+
+ATMState <|-- IdleState
+ATMState <|-- CardInsertedState
+ATMState <|-- PinVerifiedState
+ATMState <|-- TransactionState
+ATMState <|-- BalanceInquiryState
+ATMState <|-- MiniStatementState
+
+' ===========================================
+' STRATEGY (implements WithdrawalStrategy)
+' ===========================================
+class DynamicProgrammingWithdrawalStrategy {
+  +boolean withdraw(NoteDispenser, int)
+}
+WithdrawalStrategy <|-- DynamicProgrammingWithdrawalStrategy
+
+' ===========================================
+' INPUT DEVICE (implements Keypad)
+' ===========================================
+class Keyboard {
+  +String getInput()
+  +boolean supportsNumeric()
+  +boolean supportsTouch()
+}
+Keypad <|-- Keyboard
+
+' ===========================================
+' CORE ENTITIES
+' ===========================================
+class Note {
+  -int denomination
+  -int count
+  +int getDenomination()
+  +int getCount()
+  +void setCount(int)
+}
+class NoteDispenser {
+  -List<Note> notes
+  +Note findNoteByDenomination(int)
+  +List<Note> getAvailableNotes()
+  +boolean dispense(double)
+}
+
+class Receipt {
+  -String transactionType
+  -double amount
+  -String timestamp
+  +String toString()
+}
+
+class Account {
+  -double balance
+  +double getBalance()
+  +void deposit(double)
+  +void withdraw(double)
+}
+
+class TransactionHistory {
+  -List<Transaction> transactions
+  +void addTransaction(String, double)
+  +List<Transaction> getLastNTransactions(int)
+
+  class Transaction {
+    +String type
+    +double amount
+    +String timestamp
+  }
+}
+class ATM {
+  +void main(String[])
+}
+
+' ===========================================
+' CONTEXT AND AGGREGATION
+' ===========================================
+class ATMContext {
+  -ATMState idleState
+  -ATMState cardInsertedState
+  -ATMState pinVerifiedState
+  -ATMState transactionState
+  -ATMState balanceInquiryState
+  -ATMState miniStatementState
+  -ATMState currentState
+  -String selectedTransaction
+  -double lastAmount
+  -NoteDispenser noteDispenser
+  -WithdrawalStrategy withdrawalStrategy
+  -Account account
+  -TransactionHistory transactionHistory
+  -Keypad keypad
+
+  +void insertCard()
+  +void removeCard()
+  +void enterPin()
+  +void selectTransaction()
+  +void deposit()
+  +void withdraw()
+  +void balanceInquiry()
+  +void miniStatement()
+  +void printReceipt()
+  +void runATM()
+  +ATMState getState()
+  +void setState(ATMState)
+  +ATMState getIdleState()
+  +ATMState getCardInsertedState()
+  +ATMState getPinVerifiedState()
+  +ATMState getTransactionState()
+  +ATMState getBalanceInquiryState()
+  +ATMState getMiniStatementState()
+  +String getSelectedTransaction()
+  +void setSelectedTransaction(String)
+  +double getLastAmount()
+  +void setLastAmount(double)
+  +NoteDispenser getNoteDispenser()
+  +WithdrawalStrategy getWithdrawalStrategy()
+  +void setWithdrawalStrategy(WithdrawalStrategy)
+  +Account getAccount()
+  +TransactionHistory getTransactionHistory()
+  +Keypad getKeypad()
+  +void setKeypad(Keypad)
+}
+
+' ===========================================
+' RELATIONSHIPS
+' ===========================================
+ATMContext *-- IdleState
+ATMContext *-- CardInsertedState
+ATMContext *-- PinVerifiedState
+ATMContext *-- TransactionState
+ATMContext *-- BalanceInquiryState
+ATMContext *-- MiniStatementState
+
+ATMContext "1" *-- "1" NoteDispenser
+ATMContext "1" *-- "1" WithdrawalStrategy
+ATMContext "1" *-- "1" Account
+ATMContext "1" *-- "1" TransactionHistory
+ATMContext "1" *-- "1" Keypad
+
+NoteDispenser "1" *-- "many" Note
+
+TransactionHistory "1" *-- "many" : contains > Transaction
+
+DynamicProgrammingWithdrawalStrategy ..> NoteDispenser
+
+ATM ..> ATMContext : uses
+
+@enduml
